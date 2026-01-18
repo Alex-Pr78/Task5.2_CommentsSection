@@ -1,14 +1,14 @@
-import { useState, useEffect, useActionState } from "react";
+import { useState, useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import styles from "./CommentsSection.module.css";
 
 const arrayOfComments = [
-  { id: 3, text: "Первый комментарий" },
-  { id: 4, text: "Второй комментарий" },
+  { text: "Первый комментарий" },
+  { text: "Второй комментарий" },
 ];
 
-const sendData = async (_, textAreaData) => {
-  const data = { text: textAreaData.get("text") };
+const sendData = async (_, formData) => {
+  const data = { text: formData.get("text") };
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   if (Math.random() < 0.2) {
@@ -32,22 +32,26 @@ export const CommentsSection = () => {
   const [message, submitAction, isPending] = useActionState(sendData, null);
   const [comments, setComments] = useState(arrayOfComments);
 
-  useEffect(() => {
-    if (message && message.data && message.data.text) {
-      const newComment = {
-        id: Date.now(),
-        text: message.data.text,
-      };
+  // Добавляем новый комментарий, если пришли новые данные
+  if (message && message.data && message.data.text) {
+    const newComment = {
+      text: message.data.text,
+    };
+
+    // Проверяем, чтобы не добавить дубликат при повторных рендерах
+    const exists = comments.some((com) => com.text === newComment.text);
+    if (!exists) {
       setComments((prev) => [...prev, newComment]);
     }
-  }, [message]);
+  }
+
 
   return (
     <div className={styles.container}>
       <h3 className={styles.title}>Комментарии</h3>
       <ul className={styles.list}>
-        {comments.map(({ id, text }) => (
-          <li key={id} className={styles.listItem}>
+        {comments.map(({ text }) => (
+          <li key={text} className={styles.listItem}>
             {text}
           </li>
         ))}
@@ -71,3 +75,5 @@ export const CommentsSection = () => {
     </div>
   );
 };
+
+
